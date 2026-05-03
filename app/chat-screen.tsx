@@ -103,6 +103,7 @@ export default function ChatScreen() {
             decided_by: data.decided_by,
             reason:     data.reason,
             symptoms:   (data.symptoms_detected || []).join(","),
+             input_method: "chat",
           },
         });
       }, 1000);

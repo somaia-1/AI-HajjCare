@@ -4,6 +4,8 @@ import React from "react";
 import { Alert, Linking, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 import { colors, radius, shadow, spacing, typography } from "@/constants/theme";
+import { supabase } from "@/lib/supabase";
+import { useEffect, useRef } from "react";
 
 const SEVERITY_CONFIG = {
   High: {
@@ -51,8 +53,6 @@ const SEVERITY_CONFIG = {
 const decidedByLabel: Record<string, string> = {
   model:            "🤖 Model",
   safety_override:  "🛡️ Safety Rule",
-  gemini_override:  "🧠 Gemini AI",
-  confidence_boost: "📊 Confidence Boost",
 };
 
 export default function ResultScreen() {
@@ -63,6 +63,7 @@ export default function ResultScreen() {
     decided_by: string;
     reason:     string;
     symptoms:   string;
+    input_method: string;
   }>();
 
   const severity   = params.severity   || "Insufficient";
@@ -70,10 +71,77 @@ export default function ResultScreen() {
   const decided_by = params.decided_by || "model";
   const reason     = params.reason     || "";
   const symptoms   = params.symptoms   ? params.symptoms.split(",") : [];
+  const input_method = params.input_method || "unknown";
 
   const config = SEVERITY_CONFIG[severity as keyof typeof SEVERITY_CONFIG] || SEVERITY_CONFIG.Insufficient;
 
   const phoneNumber = "911";
+
+  const hasSaved = useRef(false);
+  useEffect(() => {
+    const saveToDatabase = async () => {
+      // don't save if severity is insufficient or if we've already saved for this session.
+      if (severity === "Insufficient" || hasSaved.current) return;
+      hasSaved.current = true;
+
+      try {
+        //1. user authentication and session saving logic
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+          //2. user is authenticated, now we find their pilgrim profile
+        const { data: pilgrim, error: pilgrimError } = await supabase
+          .from("pilgrims")
+          .select("id")
+          .eq("user_id", user.id)
+          .single();
+
+        if (pilgrimError || !pilgrim) {
+          console.log("Pilgrim profile not found for saving session.");
+          return;
+        }
+
+        //3. Save the analysis session
+        const { data: session, error: sessionError } = await supabase
+          .from("analysis_sessions")
+          .insert({
+            pilgrim_id: pilgrim.id,
+            input_method: input_method,
+            severity_result: severity,
+            confidence_score: confidence,
+             decided_by: decided_by,
+            reason: reason
+          })
+          .select() // to return the inserted session with its ID
+          .single();
+
+        if (sessionError || !session) {
+          console.error("Error saving session:", sessionError);
+          return;
+        }
+
+        //4. Save detected symptoms linked to this session
+        if (symptoms.length > 0) {
+          const symptomsData = symptoms.map(symp => ({
+            session_id: session.id,
+            symptom_name: symp.trim()
+          }));
+            const { error: symptomsError } = await supabase
+            .from("session_symptoms")
+            .insert(symptomsData);
+
+          if (symptomsError) {
+            console.error("Error saving symptoms:", symptomsError);
+          } else {
+            console.log("✅ Session and Symptoms saved to database successfully!");
+          }
+        }
+
+      } catch (error) {
+        console.error("Database Save Exception:", error);
+      }
+    };
+     saveToDatabase();
+  }, [severity]); //to run only once when severity is determined
 
   const callEmergency = () => {
     const phoneUrl = `telprompt:${phoneNumber}`;

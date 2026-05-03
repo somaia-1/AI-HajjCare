@@ -70,6 +70,7 @@ export default function SymptomIntakeScreen() {
           decided_by: data.decided_by,
           reason:     data.reason,
           symptoms:   selectedSymptoms.join(","),
+          input_method: "quick_checklist",
         },
       });
     } catch (error) {
