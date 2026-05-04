@@ -192,6 +192,40 @@ export default function HomeScreen() {
       
       <Ionicons name="chevron-forward" size={22} color={colors.textSecondary} />
     </TouchableOpacity>
+  <TouchableOpacity 
+  style={{ 
+    backgroundColor: colors.card, 
+    borderRadius: radius.md, 
+    padding: spacing.lg, 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    borderWidth: 1,
+    borderColor: colors.divider,
+    marginTop: spacing.md, 
+    ...shadow.card 
+  }}
+  onPress={() => router.push("../history")}
+>
+  <View style={{ 
+    backgroundColor: colors.primaryLight, 
+    padding: spacing.sm, 
+    borderRadius: radius.sm,
+    marginRight: spacing.md
+  }}>
+    <Ionicons name="time" size={26} color={colors.primary} />
+  </View>
+  
+  <View style={{ flex: 1 }}>
+    <Text style={{ ...typography.subtitle, color: colors.textPrimary }}>
+      Medical History
+    </Text>
+    <Text style={{ ...typography.caption, color: colors.textSecondary }}>
+      Past AI Analysis Records
+    </Text>
+  </View>
+  
+  <Ionicons name="chevron-forward" size={22} color={colors.textSecondary} />
+</TouchableOpacity>
 
   </ScrollView>
 );}

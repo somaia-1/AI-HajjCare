@@ -10,6 +10,7 @@ export default function RootLayout() {
        <Stack.Screen name="symptom-screen" options={{ title: "Symptom Analysis" }} />
       <Stack.Screen name="chat-screen" options={{ title: "AI Consultant" }} />
       <Stack.Screen name="result-screen" options={{ title: "Results" }} />
+      <Stack.Screen name="history" options={{ title: "Medical History" }} />
     </Stack>
   );
 }
