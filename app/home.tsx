@@ -1,10 +1,11 @@
 import { colors, spacing, typography, radius, shadow } from "@/constants/theme";
 import { supabase } from "@/lib/supabase";
 import { Ionicons } from "@expo/vector-icons";
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View, Linking } from "react-native";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -53,6 +54,13 @@ export default function HomeScreen() {
       setLoading(false);
     }
   };
+
+  const handleSupport = () => {
+  const email = 'hajjcare7@gmail.com';
+  Linking.openURL(`mailto:${email}`).catch((err) => 
+    console.error('Error opening email client:', err)
+  );
+};
 
   const handleLogout = () => {
     Alert.alert("Logout", "Are you sure you want to logout?", [
@@ -108,10 +116,11 @@ export default function HomeScreen() {
         AI HajjCare
       </Text>
 
-      {/* تجمع أيقونة البروفايل والخروج معاً لتفادي التعارض البصري */}
-      <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.md }}>
-          {/* أيقونة زر الترجمة نضيفها لاحقاً لما نضيف خاصية اللغات، حالياً مجرد ديكور */}
-          <Ionicons name="globe-outline" size={32} color={colors.primary} />
+     <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.md }}>
+  {/* زر الدعم الفني: يفتح تطبيق الإيميل */}
+  <TouchableOpacity onPress={handleSupport} style={{ padding: spacing.xs }}>
+    <MaterialIcons name="support-agent" size={32} color={colors.primary} />
+  </TouchableOpacity>
         
 
         {/* زر تسجيل الخروج حقك */}
