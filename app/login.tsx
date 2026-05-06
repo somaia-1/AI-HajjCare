@@ -1,26 +1,26 @@
-import { colors, radius, spacing, typography } from "@/constants/theme";
+import { colors, radius, shadow, spacing, typography } from "@/constants/theme";
 import { supabase } from "@/lib/supabase";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react"; // 👈 انتبه: أضفنا useRef
-import { Alert, ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { Alert, ActivityIndicator, Text, TouchableOpacity, View, StyleSheet } from "react-native";
 
 export default function LoginScreen() {
   const router = useRouter();
   const [permission, requestPermission] = useCameraPermissions();
   const [showScanner, setShowScanner] = useState(false);
   
-  // 🔒 القفل الصارم (استخدام useRef بدلاً من State)
+  
   const isProcessing = useRef(false);
 
   useEffect(() => {
-    // تصفير القفل عند فتح الصفحة
+   
     isProcessing.current = false;
   }, []);
 
   const handleBarCodeScanned = async ({ data }: { data: string }) => {
-    // 1️⃣ الفحص الفوري للقفل
+  
     if (isProcessing.current) return;
     isProcessing.current = true;
     setShowScanner(false);
@@ -35,11 +35,11 @@ export default function LoginScreen() {
     }
 
     try {
-      // 2️⃣ الخطوة الأهم: التأكد أن هذا الـ id موجود في جدولنا في Supabase
+     // Step 1: fetch the pilgrim's email using the scanned Nusuk ID
       const { data: pilgrim, error: dbError } = await supabase
         .from("pilgrims")
         .select("email")
-        .eq("nusuk_id", scannedData.id) // نبحث برقم الهوية الموجود في الباركود
+        .eq("nusuk_id", scannedData.id) 
         .maybeSingle();
 
       if (dbError || !pilgrim) {
@@ -48,8 +48,7 @@ export default function LoginScreen() {
         return;
       }
 
-      // 3️⃣ إذا وجده، نرسل الرمز للإيميل المرتبط به في قاعدة بياناتنا
-      // نستخدم pilgrim.email لضمان أننا نراسل الحساب الرسمي وليس أي إيميل عشوائي
+      // Step 2: Send OTP to the pilgrim's email for authentication
       const { error: authError } = await supabase.auth.signInWithOtp({
         email: pilgrim.email,
         options: { shouldCreateUser: true },
@@ -61,7 +60,7 @@ export default function LoginScreen() {
         return;
       }
 
-      // 4️⃣ الانتقال لصفحة التحقق بنجاح
+     // Step 3: Navigate to OTP verification screen
       router.replace({
         pathname: "/otp-verification",
         params: {
@@ -76,8 +75,7 @@ export default function LoginScreen() {
     }
   };
   
-  // --- واجهة التحميل ---
-  // ملاحظة: نستخدم showScanner للتحقق لأن useRef لا يحدث الواجهة
+  // --- Loading State UI during data processing ---
   if (!showScanner && isProcessing.current) {
      return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colors.background }}>
@@ -87,7 +85,7 @@ export default function LoginScreen() {
     );
   }
 
-  // --- واجهة الكاميرا ---
+ // --- Camera Scanner Interface ---
   if (showScanner) {
     if (!permission?.granted) {
        return (
@@ -100,97 +98,152 @@ export default function LoginScreen() {
       );
     }
 
-    return (
-      <View style={{ flex: 1, backgroundColor: "black" }}>
+   return (
+      <View style={styles.scannerContainer}>
         <CameraView
-          style={{ flex: 1 }}
-          onBarcodeScanned={handleBarCodeScanned} // 👈 الدالة نفسها فيها الحماية
+          style={styles.fullScreen}
+          onBarcodeScanned={handleBarCodeScanned}
           barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
         />
         <TouchableOpacity
-          style={{ position: "absolute", bottom: 50, alignSelf: "center" }}
+          style={styles.closeScannerButton}
           onPress={() => {
-              setShowScanner(false);
-              isProcessing.current = false;
+            setShowScanner(false);
+            isProcessing.current = false;
           }}
         >
-          <Ionicons name="close-circle" size={60} color="white" />
+          <Ionicons name="close-circle" size={70} color="white" />
         </TouchableOpacity>
       </View>
     );
   }
 
-  // --- الواجهة الرئيسية ---
+  // --- Main Landing Login Interface ---
   return (
-    <View style={{ 
-      flex: 1, 
-      backgroundColor: colors.background, 
-      paddingHorizontal: spacing.xl, 
-      justifyContent: 'center', 
-      alignItems: 'center' 
-    }}>
+    <View style={styles.mainContainer}>
       
-      {/* 1. أيقونة الـ QR Code الخضراء الكبيرة في المنتصف */}
-      <View style={{ marginBottom: spacing.xl }}>
+      {/* 1. Large QR Code Icon Branding */}
+      <View style={styles.brandingWrapper}>
         <MaterialCommunityIcons 
           name="qrcode" 
           size={140} 
-          color={colors.primary} // الأخضر الأساسي من الثيم حقك
+          color={colors.primary} 
         />
       </View>
 
-      {/* 2. العنوان الرئيسي */}
-      <Text style={{ 
-        fontSize: 26, 
-        fontWeight: 'bold', 
-        color: colors.textPrimary, 
-        marginBottom: spacing.sm,
-        textAlign: 'center'
-      }}>
-        Scan Your Nusuk Card
+      {/* 2. Main Title */}
+      <Text style={styles.title}>Scan Your Nusuk Card</Text>
+
+      {/* 3. Description text explaining the login process */}
+      <Text style={styles.subtitle}>
+        Point your camera at the QR code on your Nusuk card to log in securely.
       </Text>
 
-      {/* 3. النص الوصفي الصغير */}
-      <Text style={{ 
-        fontSize: 16, 
-        color: colors.textSecondary, 
-        textAlign: 'center', 
-        marginBottom: spacing.xxl, // مسافة كبيرة قبل الزر
-        lineHeight: 22,
-        paddingHorizontal: 10
-      }}>
-        Point your camera at the QR code on your Nusuk card to log in
-      </Text>
-
-      {/* 4. زر البدء (Start Scanning) */}
+      {/* 4. Action Button: Start Scanning */}
       <TouchableOpacity
-        style={{ 
-          backgroundColor: colors.buttonPrimary, 
-          width: '85%', // عرض الزر مثل اللي بالصورة
-          height: 55, 
-          borderRadius: radius.md, 
-          flexDirection: 'row', 
-          alignItems: 'center', 
-          justifyContent: 'center', 
-          gap: 12,
-          // إضافة ظل خفيف للزر ليعطيه طابع احترافي
-          elevation: 2,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 3,
-        }}
+        style={styles.scanButton}
         onPress={() => {
           isProcessing.current = false;
           setShowScanner(true);
         }}
       >
-        <MaterialCommunityIcons name="qrcode-scan" size={22} color="white" />
-        <Text style={{ color: 'white', fontSize: 18, fontWeight: 'bold' }}>
-          Start Scanning
-        </Text>
+        <MaterialCommunityIcons name="qrcode-scan" size={24} color="white" />
+        <Text style={styles.scanButtonText}>Start Scanning</Text>
       </TouchableOpacity>
 
     </View>
   );
 }
+
+// ==========================================
+// Stylesheet
+// ==========================================
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1, 
+    justifyContent: "center", 
+    alignItems: "center", 
+    backgroundColor: colors.background 
+  },
+  loadingText: {
+    marginTop: 20, 
+    color: colors.textSecondary,
+    fontWeight: "600"
+  },
+  permissionContainer: {
+    flex: 1, 
+    justifyContent: "center", 
+    alignItems: "center", 
+    padding: 20 
+  },
+  permissionText: {
+    marginBottom: 20,
+    fontSize: 16,
+    color: colors.textPrimary
+  },
+  permissionButton: {
+    backgroundColor: colors.buttonPrimary, 
+    paddingVertical: 12, 
+    paddingHorizontal: 25, 
+    borderRadius: radius.sm 
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: "bold"
+  },
+  scannerContainer: {
+    flex: 1, 
+    backgroundColor: "black" 
+  },
+  fullScreen: {
+    flex: 1 
+  },
+  closeScannerButton: {
+    position: "absolute", 
+    bottom: 50, 
+    alignSelf: "center" 
+  },
+  mainContainer: {
+    flex: 1, 
+    backgroundColor: colors.background, 
+    paddingHorizontal: spacing.xl, 
+    justifyContent: 'center', 
+    alignItems: 'center' 
+  },
+  brandingWrapper: {
+    marginBottom: spacing.xl 
+  },
+  title: {
+    ...typography.title,
+    fontSize: 28, 
+    fontWeight: 'bold', 
+    color: colors.textPrimary, 
+    marginBottom: spacing.sm,
+    textAlign: 'center'
+  },
+  subtitle: {
+    ...typography.body,
+    fontSize: 16, 
+    color: colors.textSecondary, 
+    textAlign: 'center', 
+    marginBottom: spacing.xxl,
+    lineHeight: 24,
+    paddingHorizontal: 15
+  },
+  scanButton: {
+    backgroundColor: colors.buttonPrimary, 
+    width: '90%', 
+    height: 58, 
+    borderRadius: radius.md, 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    gap: 12,
+    ...shadow.floating // Professional elevation/shadow
+  },
+  scanButtonText: {
+    color: 'white', 
+    fontSize: 18, 
+    fontWeight: 'bold' 
+  }
+});

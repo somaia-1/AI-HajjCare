@@ -8,7 +8,9 @@ import {
   Text,
   TouchableOpacity,
   View,
+  StyleSheet
 } from "react-native";
+import Header from "../components/Header";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, radius, shadow, spacing, typography } from "@/constants/theme";
@@ -81,152 +83,68 @@ export default function SymptomIntakeScreen() {
   };
 
   return (
-    // ✅ View رئيسي بدل ScrollView — عشان نتحكم في الثابت والمتحرك
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
-
-      {/* ── Header ثابت ─────────────────────────────────────── */}
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          marginTop: spacing.xl,
-          paddingHorizontal: spacing.lg,
-          paddingBottom: spacing.md,
-          paddingTop: insets.top,
-        }}
-      >
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={{
-            padding: spacing.xs,
-            backgroundColor: colors.primaryLight,
-            borderRadius: radius.sm,
-            marginRight: spacing.md,
-          }}
-        >
-          <Ionicons name="chevron-back" size={24} color={colors.primary} />
-        </TouchableOpacity>
-        <Text style={{ ...typography.title, color: colors.textPrimary, fontSize: 22, fontWeight: "800" }}>
-          Symptom Analysis
-        </Text>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+     <View style={{ paddingHorizontal: spacing.lg }}>
+        <Header title="Symptom Analysis" />
       </View>
-
-      {/* ── القائمة — تتحرك ─────────────────────────────────── */}
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingHorizontal: spacing.lg, paddingBottom: spacing.md }}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={{ ...typography.subtitle, color: colors.textPrimary, fontWeight: "700", marginBottom: 4 }}>
-          Quick Checklist
-        </Text>
-        <Text style={{ ...typography.body, color: colors.textSecondary, fontSize: 13, marginBottom: spacing.md }}>
+        <Text style={styles.sectionTitle}>Quick Checklist</Text>
+        <Text style={styles.sectionSubtitle}>
           Select your current symptoms ({selectedSymptoms.length} selected)
         </Text>
 
-        {/* ✅ Grid بصفين */}
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+        <View style={styles.gridWrapper}>
           {COMMON_SYMPTOMS.map((symptom) => {
             const selected = selectedSymptoms.includes(symptom.value);
             return (
               <TouchableOpacity
                 key={symptom.value}
                 onPress={() => toggleSymptom(symptom.value)}
-                style={{
-                  width: "48%",
-                  backgroundColor: selected ? colors.primaryLight : colors.card,
-                  borderRadius: radius.lg,
-                  borderWidth: selected ? 1.5 : 0.5,
-                  borderColor: selected ? colors.primary : colors.divider,
-                  padding: spacing.md,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}
+                style={[
+                  styles.symptomCard, 
+                  { 
+                    backgroundColor: selected ? colors.primaryLight : colors.card,
+                    borderWidth: selected ? 1.5 : 0.5,
+                    borderColor: selected ? colors.primary : colors.divider,
+                  }
+                ]}
               >
-                <Text
-                  style={{
-                    fontSize: 13,
-                    fontWeight: "600",
-                    color: selected ? colors.primary : colors.textPrimary,
-                    flex: 1,
-                  }}
-                >
+                <Text style={[styles.symptomText, { color: selected ? colors.primary : colors.textPrimary }]}>
                   {symptom.label}
                 </Text>
-                {selected && (
-                  <Ionicons name="checkmark-circle" size={18} color={colors.primary} />
-                )}
+                {selected && <Ionicons name="checkmark-circle" size={18} color={colors.primary} />}
               </TouchableOpacity>
             );
           })}
         </View>
       </ScrollView>
 
-      {/* ── الأسفل — ثابت دايماً ────────────────────────────── */}
-      <View
-        style={{
-          paddingHorizontal: spacing.lg,
-          paddingTop: spacing.md,
-          paddingBottom: spacing.xxl,
-          borderTopWidth: 0.5,
-          borderTopColor: colors.divider,
-          backgroundColor: colors.background,
-          gap: spacing.sm,
-        }}
-      >
-        {/* زر الشات */}
-        <TouchableOpacity
-          style={{
-            backgroundColor: colors.card,
-            borderRadius: radius.lg,
-            padding: spacing.md,
-            borderWidth: 1,
-            borderColor: colors.primary,
-            flexDirection: "row",
-            alignItems: "center",
-            ...shadow.card,
-          }}
-          onPress={() => router.push("/chat-screen")}
-        >
-          <View
-            style={{
-              backgroundColor: colors.primaryLight,
-              padding: 10,
-              borderRadius: radius.md,
-              marginRight: spacing.md,
-            }}
-          >
+      {/* Bottom Action Area */}
+      <View style={styles.footer}>
+        <TouchableOpacity style={styles.chatCard} onPress={() => router.push("/chat-screen")}>
+          <View style={styles.chatIconWrapper}>
             <MaterialCommunityIcons name="robot-outline" size={24} color={colors.primary} />
           </View>
-          <View style={{ flex: 1 }}>
-            <Text style={{ ...typography.body, fontWeight: "700", color: colors.textPrimary }}>
-              Chat with AI
-            </Text>
-            <Text style={{ ...typography.caption, color: colors.textSecondary }}>
-              Describe your condition
-            </Text>
+          <View style={styles.chatTextWrapper}>
+            <Text style={styles.chatTitle}>Chat with AI</Text>
+            <Text style={styles.chatSubtitle}>Describe your condition</Text>
           </View>
           <Ionicons name="chatbubble-ellipses-outline" size={22} color={colors.primary} />
         </TouchableOpacity>
 
-        {/* زر View Results */}
         <TouchableOpacity
-          style={{
-            backgroundColor: colors.buttonPrimary,
-            borderRadius: radius.md,
-            padding: spacing.lg,
-            alignItems: "center",
-            ...shadow.floating,
-            opacity: selectedSymptoms.length >= 3 ? 1 : 0.5,
-          }}
+          style={[styles.analyzeButton, { opacity: selectedSymptoms.length >= 3 ? 1 : 0.5 }]}
           disabled={selectedSymptoms.length < 3 || loading}
           onPress={handleAnalyze}
         >
           {loading ? (
             <ActivityIndicator color={colors.textOnPrimary} />
           ) : (
-            <Text style={{ ...typography.body, fontWeight: "700", color: colors.textOnPrimary, fontSize: 16 }}>
+            <Text style={styles.analyzeButtonText}>
               View Results {selectedSymptoms.length >= 3 ? `(${selectedSymptoms.length})` : ""}
             </Text>
           )}
@@ -236,3 +154,97 @@ export default function SymptomIntakeScreen() {
     </View>
   );
 }
+
+// ==========================================
+// styles
+// ==========================================
+const styles = StyleSheet.create({
+  container: {
+    flex: 1, 
+    backgroundColor: colors.background
+  },
+  scrollContent: {
+    paddingHorizontal: spacing.lg, 
+    paddingBottom: spacing.md
+  },
+  sectionTitle: {
+    ...typography.subtitle, 
+    color: colors.textPrimary, 
+    fontWeight: "700", 
+    marginBottom: 4
+  },
+  sectionSubtitle: {
+    ...typography.body, 
+    color: colors.textSecondary, 
+    fontSize: 13, 
+    marginBottom: spacing.md
+  },
+  gridWrapper: {
+    flexDirection: "row", 
+    flexWrap: "wrap", 
+    gap: 8
+  },
+  symptomCard: {
+    width: "48%",
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  symptomText: {
+    fontSize: 13,
+    fontWeight: "600",
+    flex: 1,
+  },
+  footer: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.xxl,
+    borderTopWidth: 0.5,
+    borderTopColor: colors.divider,
+    backgroundColor: colors.background,
+    gap: spacing.sm,
+  },
+  chatCard: {
+    backgroundColor: colors.card,
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    flexDirection: "row",
+    alignItems: "center",
+    ...shadow.card,
+  },
+  chatIconWrapper: {
+    backgroundColor: colors.primaryLight,
+    padding: 10,
+    borderRadius: radius.md,
+    marginRight: spacing.md,
+  },
+  chatTextWrapper: {
+    flex: 1
+  },
+  chatTitle: {
+    ...typography.body, 
+    fontWeight: "700", 
+    color: colors.textPrimary
+  },
+  chatSubtitle: {
+    ...typography.caption, 
+    color: colors.textSecondary
+  },
+  analyzeButton: {
+    backgroundColor: colors.buttonPrimary,
+    borderRadius: radius.md,
+    padding: spacing.lg,
+    alignItems: "center",
+    ...shadow.floating,
+  },
+  analyzeButtonText: {
+    ...typography.body, 
+    fontWeight: "700", 
+    color: colors.textOnPrimary, 
+    fontSize: 16
+  }
+});

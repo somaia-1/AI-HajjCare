@@ -11,13 +11,15 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  StyleSheet
 } from "react-native";
+import Header from "../components/Header";
 import { useHeaderHeight } from '@react-navigation/elements';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, radius, shadow, spacing, typography } from "@/constants/theme";
 
-// ── رابط الـ Backend — غيّريه لرابط ngrok الخاص بك ──────────────
+// ────────────────────── API URL ──────────────────────────────────
 const API_URL = "https://gaited-stormless-galileo.ngrok-free.dev";
 // ─────────────────────────────────────────────────────────────────
 
@@ -64,7 +66,7 @@ export default function ChatScreen() {
 
       const data = await response.json();
 
-      // لو ما عرف يستخرج أعراض
+      // if severity is null or undefined, ask for more information
       if (!data.severity || data.severity === null) {
         const botMessage: Message = {
           id: (Date.now() + 1).toString(),
@@ -75,7 +77,7 @@ export default function ChatScreen() {
         return;
       }
 
-      // لو الأعراض أقل من 3
+     // Ensure severity data exists, otherwise ask for more clarity
       if (data.severity === "Insufficient") {
         const botMessage: Message = {
           id: (Date.now() + 1).toString(),
@@ -86,14 +88,14 @@ export default function ChatScreen() {
         return;
       }
 
-      // النتيجة جاهزة — انتقل لشاشة النتيجة
+      
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "bot",
         text: `Symptoms analyzed successfully ✅\nDisplaying results...`,
 };
       setMessages((prev) => [...prev, botMessage]);
-
+      // Redirect to results after processing
       setTimeout(() => {
         router.push({
           pathname: "/result-screen",
@@ -109,155 +111,85 @@ export default function ChatScreen() {
       }, 1000);
 
     } catch (error) {
-      Alert.alert("خطأ", "تعذّر الاتصال بالسيرفر.");
+      Alert.alert("Error", "An error occurred while communicating with the server. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
+  /**
+   * Component to render each chat message bubble.
+   */
   const renderMessage = ({ item }: { item: Message }) => {
     const isUser = item.role === "user";
     return (
-      <View
-        style={{
-          alignSelf: isUser ? "flex-end" : "flex-start",
-          maxWidth: "80%",
-          marginVertical: spacing.xs,
-          marginHorizontal: spacing.sm,
-        }}
-      >
+      <View style={[styles.messageWrapper, isUser ? styles.userWrapper : styles.botWrapper]}>
         <View
-          style={{
-            backgroundColor: isUser ? colors.primary : colors.card,
-            borderRadius: radius.lg,
-            borderBottomRightRadius: isUser ? 4 : radius.lg,
-            borderBottomLeftRadius: isUser ? radius.lg : 4,
-            padding: spacing.md,
-            ...shadow.card,
-          }}
+          style={[
+            styles.messageBubble,
+            {
+              backgroundColor: isUser ? colors.primary : colors.card,
+              borderBottomRightRadius: isUser ? 4 : radius.lg,
+              borderBottomLeftRadius: isUser ? radius.lg : 4,
+            }
+          ]}
         >
-          <Text
-            style={{
-              color: isUser ? colors.textOnPrimary : colors.textPrimary,
-              fontSize: 15,
-              lineHeight: 22,
-            }}
-          >
+          <Text style={[styles.messageText, { color: isUser ? colors.textOnPrimary : colors.textPrimary }]}>
             {item.text}
           </Text>
         </View>
       </View>
     );
   };
-const headerHeight = useHeaderHeight();
+
   return (
-<KeyboardAvoidingView 
-  behavior={Platform.OS === "ios" ? "padding" : "height"} 
-  keyboardVerticalOffset={Platform.OS === "ios" ? headerHeight : 0} 
-  style={{ flex: 1 }}
->
-      {/* Header */}
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          paddingTop: insets.top + spacing.md,
-          paddingHorizontal: spacing.lg,
-          paddingBottom: spacing.md,
-          backgroundColor: colors.background,
-          borderBottomWidth: 1,
-          borderBottomColor: colors.divider,
-        }}
-      >
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={{
-            padding: spacing.xs,
-            backgroundColor: colors.primaryLight,
-            borderRadius: radius.sm,
-            marginRight: spacing.md,
-          }}
-        >
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === "ios" ? "padding" : "height"} 
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0} 
+      style={styles.container}
+    >
+      {/* --- Custom Header with Responsive Insets --- */}
+      <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="chevron-back" size={24} color={colors.primary} />
         </TouchableOpacity>
-        <View style={{ flex: 1 }}>
-          <Text style={{ ...typography.title, fontSize: 18, fontWeight: "800", color: colors.textPrimary }}>
-            AI Medical Consultant
-          </Text>
+        <View style={styles.headerTitleContainer}>
+          <Text style={styles.headerTitle}>AI Medical Consultant</Text>
         </View>
-        <View
-          style={{
-            width: 10,
-            height: 10,
-            borderRadius: 5,
-            backgroundColor: "#22c55e",
-          }}
-        />
+        <View style={styles.onlineDot} />
       </View>
 
-      {/* Messages */}
+      {/* --- Scrollable Chat Area --- */}
       <FlatList
         ref={flatListRef}
         data={messages}
         keyExtractor={(item) => item.id}
         renderItem={renderMessage}
-        contentContainerStyle={{ paddingVertical: spacing.md }}
+        contentContainerStyle={styles.listContent}
         onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
       />
 
-      {/* Loading indicator */}
       {loading && (
-        <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: spacing.lg, paddingBottom: spacing.sm }}>
+        <View style={styles.loadingArea}>
           <ActivityIndicator size="small" color={colors.primary} />
-          <Text style={{ marginLeft: spacing.sm, color: colors.textSecondary, fontSize: 13 }}>
-           Analyzing...
-          </Text>
+          <Text style={styles.loadingText}>Analyzing...</Text>
         </View>
       )}
 
-      {/* Input */}
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          padding: spacing.md,
-          borderTopWidth: 1,
-          borderTopColor: colors.divider,
-          backgroundColor: colors.background,
-          gap: spacing.sm,
-        }}
-      >
+      {/* --- Fixed Input Area at the bottom --- */}
+      <View style={[styles.inputArea]}>
         <TextInput
-          style={{
-            flex: 1,
-            backgroundColor: colors.card,
-            borderRadius: radius.full,
-            paddingHorizontal: spacing.md,
-            paddingVertical: spacing.sm,
-            fontSize: 15,
-            color: colors.textPrimary,
-            borderWidth: 1,
-            borderColor: colors.divider,
-            textAlign: "right",
-          }}
-          placeholder="Describe your symptoms in English..."
+          style={styles.textInput}
+          placeholder="Type your symptoms..."
           placeholderTextColor={colors.textMuted}
           value={input}
           onChangeText={setInput}
           multiline
-          onSubmitEditing={sendMessage}
         />
         <TouchableOpacity
           onPress={sendMessage}
           disabled={!input.trim() || loading}
-          style={{
-            backgroundColor: input.trim() ? colors.primary : colors.divider,
-            width: 44,
-            height: 44,
-            borderRadius: 22,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          style={[styles.sendButton, { backgroundColor: input.trim() ? colors.primary : colors.divider }]}
         >
           <Ionicons name="send" size={20} color={colors.textOnPrimary} />
         </TouchableOpacity>
@@ -265,3 +197,102 @@ const headerHeight = useHeaderHeight();
     </KeyboardAvoidingView>
   );
 }
+
+// ==========================================
+// Professional Stylesheet
+// ==========================================
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.md,
+    backgroundColor: colors.background,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.divider,
+  },
+  backButton: {
+    padding: spacing.xs,
+    backgroundColor: colors.primaryLight,
+    borderRadius: radius.sm,
+    marginRight: spacing.md,
+  },
+  headerTitleContainer: {
+    flex: 1
+  },
+  headerTitle: {
+    ...typography.title, 
+    fontSize: 18, 
+    fontWeight: "800", 
+    color: colors.textPrimary 
+  },
+  onlineDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#22c55e",
+  },
+  listContent: {
+    paddingVertical: spacing.md
+  },
+  messageWrapper: {
+    maxWidth: "80%",
+    marginVertical: spacing.xs,
+    marginHorizontal: spacing.sm,
+  },
+  userWrapper: { alignSelf: "flex-end" },
+  botWrapper: { alignSelf: "flex-start" },
+  messageBubble: {
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    ...shadow.card,
+  },
+  messageText: {
+    fontSize: 15,
+    lineHeight: 22,
+  },
+  loadingArea: {
+    flexDirection: "row", 
+    alignItems: "center", 
+    paddingHorizontal: spacing.lg, 
+    paddingBottom: spacing.sm 
+  },
+  loadingText: {
+    marginLeft: spacing.sm, 
+    color: colors.textSecondary, 
+    fontSize: 13 
+  },
+  inputArea: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.divider,
+    backgroundColor: colors.background,
+    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
+  },
+  textInput: {
+    flex: 1,
+    backgroundColor: colors.card,
+    borderRadius: radius.full,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    fontSize: 15,
+    color: colors.textPrimary,
+    borderWidth: 1,
+    borderColor: colors.divider,
+    textAlign: "left",
+  },
+  sendButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+  }
+});

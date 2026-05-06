@@ -1,10 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { FlatList, Text, TouchableOpacity, View, ActivityIndicator } from "react-native";
-
+import { FlatList, Text, TouchableOpacity, View, ActivityIndicator, StyleSheet } from "react-native";
+import Header from "../components/Header";
 import { colors, radius, shadow, spacing, typography } from "@/constants/theme";
 import { supabase } from "@/lib/supabase";
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface AnalysisSession {
   id: string;
@@ -14,6 +15,7 @@ interface AnalysisSession {
 }
 
 export default function HistoryScreen() {
+   const insets = useSafeAreaInsets();
   const router = useRouter();
   const [sessions, setSessions] = useState<AnalysisSession[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,32 +63,16 @@ export default function HistoryScreen() {
  const renderItem = ({ item }: { item: AnalysisSession }) => {
     const theme = getSeverityTheme(item.severity_result);
     return (
-      <View style={{ 
-        backgroundColor: colors.card, 
-        borderRadius: radius.lg, 
-        padding: spacing.md, 
-        marginBottom: spacing.md, 
-        flexDirection: "row", 
-        alignItems: "center",
-        borderLeftWidth: 6,
-        borderLeftColor: theme.color, 
-        ...shadow.card 
-      }}>
-        <View style={{ 
-          backgroundColor: theme.color + "15", // خلفية شفافة من نفس لون الحالة
-          padding: spacing.sm,
-          borderRadius: radius.sm,
-          marginRight: spacing.md
-        }}>
+      <View style={[styles.card, { borderLeftColor: theme.color }]}>
+        <View style={[styles.iconWrapper, { backgroundColor: theme.color + "15" }]}>
           <Ionicons name={theme.icon as any} size={22} color={theme.color} />
         </View>
 
-        <View style={{ flex: 1 }}>
-            <Text style={{ ...typography.body, fontWeight: "800", color: theme.color }}>
+        <View style={styles.cardContent}>
+            <Text style={[styles.severityText, { color: theme.color }]}>
               {item.severity_result} Severity
             </Text>
-          
-          <Text style={{ ...typography.caption, color: colors.textSecondary }}>
+          <Text style={styles.dateText}>
             {new Date(item.created_at).toLocaleDateString()} • via {item.input_method === "chat" ? "AI Chat" : "Checklist"}
           </Text>
         </View>
@@ -95,30 +81,69 @@ export default function HistoryScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background, padding: spacing.lg }}>
-      <View style={{ flexDirection: "row", alignItems: "center", marginTop: spacing.xl, marginBottom: spacing.lg }}>
-        <TouchableOpacity onPress={() => router.back()} style={{ padding: spacing.xs, backgroundColor: colors.primaryLight, borderRadius: radius.sm }}>
-          <Ionicons name="chevron-back" size={24} color={colors.primary} />
-        </TouchableOpacity>
-        <Text style={{ ...typography.title, color: colors.textPrimary, marginLeft: spacing.md }}>Medical History</Text>
-      </View>
+    <View style={[styles.container, { paddingTop: insets.top } ]}>
+      <Header title="Medical History" />
 
       {loading ? (
-        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: spacing.xl }} />
+        <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />
       ) : (
         <FlatList
           data={sessions}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           ListEmptyComponent={
-            <View style={{ alignItems: "center", marginTop: spacing.xxl }}>
+            <View style={styles.emptyContainer}>
               <Ionicons name="clipboard-outline" size={60} color={colors.divider} />
-              <Text style={{ color: colors.textSecondary, marginTop: spacing.sm }}>No previous records.</Text>
+              <Text style={styles.emptyText}>No previous records.</Text>
             </View>
           }
           showsVerticalScrollIndicator={false}
         />
       )}
     </View>
-  );
-}
+  );} 
+  
+const styles = StyleSheet.create({
+  container: {
+    flex: 1, 
+    backgroundColor: colors.background, 
+    padding: spacing.lg
+  },
+  loader: {
+    marginTop: spacing.xl
+  },
+  card: {
+    backgroundColor: colors.card, 
+    borderRadius: radius.lg, 
+    padding: spacing.md, 
+    marginBottom: spacing.md, 
+    flexDirection: "row", 
+    alignItems: "center",
+    borderLeftWidth: 6,
+    ...shadow.card 
+  },
+  iconWrapper: {
+    padding: spacing.sm,
+    borderRadius: radius.sm,
+    marginRight: spacing.md
+  },
+  cardContent: {
+    flex: 1
+  },
+  severityText: {
+    ...typography.body, 
+    fontWeight: "800"
+  },
+  dateText: {
+    ...typography.caption, 
+    color: colors.textSecondary
+  },
+  emptyContainer: {
+    alignItems: "center", 
+    marginTop: spacing.xxl
+  },
+  emptyText: {
+    color: colors.textSecondary, 
+    marginTop: spacing.sm
+  }
+});

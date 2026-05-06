@@ -2,9 +2,10 @@ export const colors = {
   /* =======================
      Brand / Identity
   ======================== */
-  primary: "#2BB673",        // الأخضر الأساسي (حسب التقرير)
+  primary: "#2BB673",        
   primaryDark: "#1F9D6A",
   primaryLight: "#EAF7F1",
+  blue: "#3b82f6", //support agent icon color
 
   /* =======================
      Backgrounds
@@ -26,11 +27,11 @@ export const colors = {
      Severity Levels
   ======================== */
   severity: {
-    normal: "#22C55E",       // 🟢 طبيعي
-    low: "#A3E635",          // 🟢 منخفض
-    moderate: "#F59E0B",     // 🟡 متوسط
-    high: "#EF4444",         // 🔴 متوسط شديد (بحاجة تدخل)
-    emergency: "#DC2626",    // 🚨 بلاغ طارئ
+    low: "#22C55E",          // 🟢 low
+    moderate: "#f97316",     // 🟡 moderate
+    high: "#EF4444",         // 🔴 high
+    emergency: "#DC2626",    // 🚨 emergency
+    insufficientData: "#6B7280" // ⚪️ insufficient data
   },
 
   /* =======================

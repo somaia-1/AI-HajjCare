@@ -1,35 +1,36 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef } from "react";
-import { Linking, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Linking, ScrollView, Text, TouchableOpacity, View, StyleSheet} from "react-native";
+import Header from "../components/Header";
 import { supabase } from "@/lib/supabase";
 import { colors, radius, shadow, spacing, typography } from "@/constants/theme";
 
 const SEVERITY_CONFIG = {
   High: {
-    color: "#ef4444",
+    color: colors.severity.high,
     bgColor: "#fef2f2",
     icon: "alert-circle" as const,
     title: "⚠️ Critical Condition",
     subtitle: "Call Emergency?",
     description: "Your symptoms indicate a medical emergency that requires immediate attention. Do not delay — go to the nearest hospital or medical center now.",
     action: "🏥 Get Help Now",
-    actionColor: "#ef4444",
+    actionColor: colors.severity.high,
     type: "Hospital",
   },
   Medium: {
-    color: "#f97316",
+    color: colors.severity.moderate,
     bgColor: "#fff7ed",
     icon: "warning" as const,
     title: "Medium Condition",
     subtitle: "See a doctor soon",
     description: "Your condition requires medical attention as soon as possible. Do not ignore your symptoms — visit the nearest clinic or medical center.",
     action: "Find Nearby Hospitals",
-    actionColor: "#f97316",
+    actionColor: colors.severity.moderate,
     type: "PHCC",
   },
   Low: {
-    color: "#22c55e",
+    color: colors.severity.low,
     bgColor: "#f0fdf4",
     icon: "checkmark-circle" as const,
     title: "✅ Mild Condition",
@@ -40,14 +41,14 @@ const SEVERITY_CONFIG = {
     type: "PHCC",
   },
   Insufficient: {
-    color: "#6b7280",
+    color: colors.severity.insufficientData,
     bgColor: "#f9fafb",
     icon: "help-circle" as const,
     title: "❓ Insufficient Data",
     subtitle: "Please enter more symptoms",
     description: "The symptoms provided were not enough to determine the severity accurately. Please enter at least 3 symptoms.",
     action: "🔄 Try Again",
-    actionColor: "#6b7280",
+    actionColor: colors.severity.insufficientData,
     type: "PHCC",
   },
 };
@@ -98,56 +99,163 @@ export default function ResultScreen() {
     saveToDatabase();
   }, [severity]);
 
-  return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <ScrollView contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl }}>
-        <View style={{ flexDirection: "row", alignItems: "center", marginTop: spacing.xl, marginBottom: spacing.xl }}>
-          <TouchableOpacity onPress={() => router.back()} style={{ padding: spacing.xs, backgroundColor: colors.primaryLight, borderRadius: radius.sm, marginRight: spacing.md }}>
-            <Ionicons name="chevron-back" size={24} color={colors.primary} />
-          </TouchableOpacity>
-          <Text style={{ ...typography.title, color: colors.textPrimary, fontSize: 22, fontWeight: "800" }}>Analysis Results</Text>
-        </View>
+ return (
+    <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        
+        {/* Unified Header Component */}
+        <Header title="Analysis Results" />
 
-        <View style={{ backgroundColor: config.bgColor, borderRadius: radius.xl, padding: spacing.xl, alignItems: "center", marginBottom: spacing.xl, borderWidth: 2, borderColor: config.color, ...shadow.card }}>
+        {/* Severity Status Card */}
+        <View style={[styles.statusCard, { backgroundColor: config.bgColor, borderColor: config.color }]}>
           <Ionicons name={config.icon} size={64} color={config.color} />
-          <Text style={{ fontSize: 26, fontWeight: "900", color: config.color, marginTop: spacing.md, textAlign: "center" }}>{config.title}</Text>
-          <Text style={{ fontSize: 16, color: config.color, fontWeight: "600", marginTop: spacing.xs }}>{config.subtitle}</Text>
+          <Text style={[styles.statusTitle, { color: config.color }]}>{config.title}</Text>
+          <Text style={[styles.statusSubtitle, { color: config.color }]}>{config.subtitle}</Text>
         </View>
 
-        <View style={{ backgroundColor: colors.card, borderRadius: radius.lg, padding: spacing.lg, marginBottom: spacing.lg, ...shadow.card }}>
-          <Text style={{ ...typography.subtitle, fontWeight: "700", color: colors.textPrimary, marginBottom: spacing.sm }}>Recommendation</Text>
-          <Text style={{ ...typography.body, color: colors.textSecondary, lineHeight: 24 }}>{config.description}</Text>
+        {/* Recommendation Section */}
+        <View style={styles.recommendationCard}>
+          <Text style={styles.recommendationTitle}>Recommendation</Text>
+          <Text style={styles.recommendationText}>{config.description}</Text>
         </View>
 
+        {/* Emergency Action (Visible only for High Severity) */}
         {severity === "High" && (
           <TouchableOpacity
-            style={{ backgroundColor: "#ef4444", borderRadius: radius.md, padding: spacing.lg, alignItems: "center", justifyContent: "center", marginBottom: spacing.md, flexDirection: "row", ...shadow.floating }}
+            style={styles.emergencyButton}
             onPress={() => Linking.openURL("tel:911")}
           >
-            <Ionicons name="call" size={24} color="#fff" style={{ marginRight: 10 }} />
-            <Text style={{ ...typography.body, fontWeight: "700", color: "#fff", fontSize: 18 }}>Call Emergency 911</Text>
+            <Ionicons name="call" size={24} color="#fff" style={styles.buttonIcon} />
+            <Text style={styles.emergencyButtonText}>Call Emergency 911</Text>
           </TouchableOpacity>
         )}
 
+        {/* Primary Action Button */}
         <TouchableOpacity
-          style={{ backgroundColor: colors.primary, borderRadius: radius.md, padding: spacing.lg, alignItems: "center", justifyContent: "center", marginBottom: spacing.lg, flexDirection: "row", ...shadow.floating }}
+          style={styles.actionButton}
           onPress={() => router.push({ pathname: "/FacilitiesScreen" as any, params: { type: config.type, severity: severity } })}
         >
-          <Ionicons name="location" size={24} color="#fff" style={{ marginRight: 10 }} />
-          <Text style={{ ...typography.body, fontWeight: "700", color: "#fff", fontSize: 18 }}>Find Nearest {config.type}</Text>
+          <Ionicons name="location" size={24} color="#fff" style={styles.buttonIcon} />
+          <Text style={styles.actionButtonText}>Find Nearest {config.type}</Text>
         </TouchableOpacity>
 
+        {/* Retry Analysis Button */}
         <TouchableOpacity
-          style={{ borderRadius: radius.md, padding: spacing.md, alignItems: "center", borderWidth: 1, borderColor: colors.divider }}
+          style={styles.newAnalysisButton}
           onPress={() => router.push("/symptom-screen")}
         >
-          <Text style={{ color: colors.textSecondary, fontWeight: "600" }}>🔄 New Analysis</Text>
+          <Text style={styles.newAnalysisText}>🔄 New Analysis</Text>
         </TouchableOpacity>
 
-        <Text style={{ ...typography.caption, color: colors.textMuted, textAlign: "center", marginTop: spacing.xl, lineHeight: 18 }}>
+        {/* Disclaimer Note */}
+        <Text style={styles.disclaimerText}>
           ⚠️ This app is for assistance only and does not replace professional medical advice.
         </Text>
       </ScrollView>
     </View>
   );
 }
+
+// ==========================================
+// Stylesheet
+// ==========================================
+const styles = StyleSheet.create({
+  container: {
+    flex: 1, 
+    backgroundColor: colors.background
+  },
+  scrollContent: {
+    padding: spacing.lg, 
+    paddingBottom: spacing.xxl
+  },
+  statusCard: {
+    borderRadius: radius.xl, 
+    padding: spacing.xl, 
+    alignItems: "center", 
+    marginBottom: spacing.xl, 
+    borderWidth: 2, 
+    ...shadow.card
+  },
+  statusTitle: {
+    fontSize: 26, 
+    fontWeight: "900", 
+    marginTop: spacing.md, 
+    textAlign: "center"
+  },
+  statusSubtitle: {
+    fontSize: 16, 
+    fontWeight: "600", 
+    marginTop: spacing.xs
+  },
+  recommendationCard: {
+    backgroundColor: colors.card, 
+    borderRadius: radius.lg, 
+    padding: spacing.lg, 
+    marginBottom: spacing.lg, 
+    ...shadow.card
+  },
+  recommendationTitle: {
+    ...typography.subtitle, 
+    fontWeight: "700", 
+    color: colors.textPrimary, 
+    marginBottom: spacing.sm
+  },
+  recommendationText: {
+    ...typography.body, 
+    color: colors.textSecondary, 
+    lineHeight: 24
+  },
+  emergencyButton: {
+    backgroundColor: "#ef4444", 
+    borderRadius: radius.md, 
+    padding: spacing.lg, 
+    alignItems: "center", 
+    justifyContent: "center", 
+    marginBottom: spacing.md, 
+    flexDirection: "row", 
+    ...shadow.floating
+  },
+  emergencyButtonText: {
+    ...typography.body, 
+    fontWeight: "700", 
+    color: "#fff", 
+    fontSize: 18
+  },
+  actionButton: {
+    backgroundColor: colors.primary, 
+    borderRadius: radius.md, 
+    padding: spacing.lg, 
+    alignItems: "center", 
+    justifyContent: "center", 
+    marginBottom: spacing.lg, 
+    flexDirection: "row", 
+    ...shadow.floating
+  },
+  actionButtonText: {
+    ...typography.body, 
+    fontWeight: "700", 
+    color: "#fff", 
+    fontSize: 18
+  },
+  buttonIcon: {
+    marginRight: 10
+  },
+  newAnalysisButton: {
+    borderRadius: radius.md, 
+    padding: spacing.md, 
+    alignItems: "center", 
+    borderWidth: 1, 
+    borderColor: colors.divider
+  },
+  newAnalysisText: {
+    color: colors.textSecondary, 
+    fontWeight: "600"
+  },
+  disclaimerText: {
+    ...typography.caption, 
+    color: colors.textMuted, 
+    textAlign: "center", 
+    marginTop: spacing.xl, 
+    lineHeight: 18
+  }
+});
