@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { useEffect} from "react"; 
 import { Dimensions, StyleSheet, View, Text } from "react-native"; 
 import LottieView from "lottie-react-native";
+import { StatusBar } from 'expo-status-bar';
 
 const { width } = Dimensions.get("window");
 export default function Index() {
@@ -27,18 +28,17 @@ export default function Index() {
  
   return (
     <View style={styles.container}>
+      <StatusBar style="dark" translucent={true} backgroundColor="transparent" />
       {/* Animated Splash Illustration */}
       <LottieView
-        source={require('@/assets/splash.json')}
+        source={require('@/assets/aiHajjCare-logo')}
         autoPlay
-        loop
+        loop={false}
         style={styles.lottie}
+        resizeMode="cover"
       />
 
-      {/* Brand Identity */}
-      <Text style={styles.brandText}>
-        AI HajjCare
-      </Text>
+     
     </View>
   );
 }
@@ -54,8 +54,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   lottie: {
-    width: 300,
-    height: 300,
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
   },
   brandText: {
     ...typography.title,
