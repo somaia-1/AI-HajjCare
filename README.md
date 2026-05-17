@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 # Welcome to your Expo app 👋
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
@@ -52,3 +53,6 @@ Join our community of developers creating universal apps.
 =======
 # ai-hajjcare
 >>>>>>> 8f10a8f6de0982d581c947f1855780f1aca5cbcf
+=======
+# AI-HajjCare
+>>>>>>> 53f865b01c537ca269ccfc797d3d01e45f41e5a8
