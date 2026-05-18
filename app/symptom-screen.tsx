@@ -15,7 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, radius, shadow, spacing, typography } from "@/constants/theme";
 
-const API_URL = "https://gaited-stormless-galileo.ngrok-free.dev";
+const API_URL = "https://ai-hajjcare-api.onrender.com";
 
 const COMMON_SYMPTOMS = [
   { label: "Headache",          value: "headache" },

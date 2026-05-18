@@ -5,8 +5,9 @@ import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Platform, 
 import Header from "../components/Header";
 import { supabase } from "@/lib/supabase";
 import { colors, radius, shadow, spacing, typography } from "@/constants/theme";
-
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 export default function FacilitiesScreen() {
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { type, severity } = useLocalSearchParams<{ type: string; severity: string }>();
 
@@ -43,7 +44,7 @@ export default function FacilitiesScreen() {
   };
 
  return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       
       {/* Header Component with custom padding to match original design */}
       <View style={styles.headerWrapper}>

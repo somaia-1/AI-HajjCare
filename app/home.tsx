@@ -103,7 +103,7 @@ export default function HomeScreen() {
 
         <View style={styles.actionsRow}>
           <TouchableOpacity onPress={handleSupport} style={styles.iconButton}>
-            <MaterialIcons name="support-agent" size={32} color={colors.blue} />
+            <MaterialIcons name="support-agent" size={32} color={colors.supportAgent} />
           </TouchableOpacity>
           
           <TouchableOpacity onPress={handleLogout} style={styles.iconButton}>

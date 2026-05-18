@@ -5,7 +5,7 @@ export const colors = {
   primary: "#2BB673",        
   primaryDark: "#1F9D6A",
   primaryLight: "#EAF7F1",
-  blue: "#3b82f6", //support agent icon color
+  supportAgent: "#031203", //support agent icon color
 
   /* =======================
      Backgrounds
