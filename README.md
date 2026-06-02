@@ -36,7 +36,6 @@
 - **Gestures**: React Native Gesture Handler
 
 ## 🔗 Related Repositories
- ---
 | Repository | Description |
 |---|---|
 | [ai-hajjcare-backend](https://github.com/somaia-1/ai-hajjcare-api) | FastAPI AI backend — Random Forest triage model & Gemini NLP engine |
@@ -55,7 +54,7 @@ ai-hajjcare/
 │   ├── home.tsx                # Home dashboard
 │   ├── chat-screen.tsx         # AI chat assistant
 │   ├── symptom-screen.tsx      # Symptom input form
-│   ├── result-screen.tsx       # Diagnosis results
+│   ├── result-screen.tsx       # Triage results 
 │   ├── FacilitiesScreen.tsx    # Nearby facilities map
 │   └── history.tsx             # Consultation history
 ├── components/
@@ -84,14 +83,13 @@ ai-hajjcare/
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/your-username/ai-hajjcare.git
+git clone https://github.com/somaia-1/ai-hajjcare.git
 cd ai-hajjcare
 
 # 2. Install dependencies
 npm install
 
-# 3. Set up environment variables
-cp .env.example .env
+# 3. Create environment file
 ```
 
 ### Environment Variables
@@ -101,6 +99,7 @@ Create a `.env` file in the root directory:
 ```env
 EXPO_PUBLIC_SUPABASE_URL=your_supabase_project_url
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+EXPO_PUBLIC_API_URL=your_backend_api_url
 ```
 
 > ⚠️ Never commit your `.env` file. It's already in `.gitignore`.
